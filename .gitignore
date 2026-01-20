@@ -1,0 +1,60 @@
+# created by virtualenv automatically
+*# -------------------------
+# Python cache
+# -------------------------
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# -------------------------
+# Virtual environment
+# -------------------------
+venv/
+.venv/
+ENV/
+env/
+
+# -------------------------
+# OS / Editor files
+# -------------------------
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# -------------------------
+# Jupyter / Colab
+# -------------------------
+.ipynb_checkpoints/
+
+# -------------------------
+# Logs
+# -------------------------
+*.log
+
+# -------------------------
+# Large / temporary files
+# -------------------------
+*.tmp
+*.bak
+
+# -------------------------
+# Secrets
+# -------------------------
+.env
+
+# -------------------------
+# Data files (optional)
+# -------------------------
+data/
+*.csv
+
+# -------------------------
+# Do NOT ignore these
+# -------------------------
+!app.py
+!requirements.txt
+!artifacts/
+
+
