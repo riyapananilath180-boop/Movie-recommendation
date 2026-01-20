@@ -1,188 +1,51 @@
-from gettext import install
-
-import numpy as np
+import streamlit as st
+import pickle
 import pandas as pd
-import pip
-from pandas import DataFrame
-
-#movies = pd.read_csv(".venv/data/tmdb_5000_movies.csv")
-#credits = pd.read_csv(".venv/data/tmdb_5000_credits.csv")
-
-movies.head(2)
-
-movies = movies.merge(credits,on='title')
-
-movies.head(2)
-movies.shape
-
-movies = movies[['movie_id','title','overview','genres','keywords','cast','crew', 'release_date', 'vote_average']]
-
-movies.dropna(inplace=True)
-movies['year'] = pd.to_datetime(movies['release_date'], errors='coerce').dt.year
-
-movies.head(2)
-
-movies.shape
-
-movies.isnull().sum()
-
-movies.dropna(inplace=True)
-
-movies.isnull().sum()
-movies.shape
-
-movies.duplicated().sum()
-
-movies.iloc[0]['genres']
-
-import ast #for converting str to list
-
-def convert(text):
-    L = []
-    for i in ast.literal_eval(text):
-        L.append(i['name'])
-    return L
-
-movies['genres'] = movies['genres'].apply(convert)
-movies.head()
-
-movies.iloc[0]['keywords']
-
-movies['keywords'] = movies['keywords'].apply(convert)
-movies.head()
-
-movies.iloc[0]['cast']
-
-# Here only keeping top 3 cast
-
-def convert_cast(text):
-    L = []
-    counter = 0
-    for i in ast.literal_eval(text):
-        if counter < 3:
-            L.append(i['name'])
-        counter+=1
-    return L
-
-movies['cast'] = movies['cast'].apply(convert_cast)
-movies.head()
-
-movies.iloc[0]['crew']
-
-def fetch_director(text):
-    L = []
-    for i in ast.literal_eval(text):
-        if i['job'] == 'Director':
-            L.append(i['name'])
-            break
-    return L
-
-movies['crew'] = movies['crew'].apply(fetch_director)
-
-movies.head()
-
-movies.iloc[0]['overview']
-
-movies['overview'] = movies['overview'].apply(lambda x:x.split())
-movies.sample(4)
-
-movies.iloc[0]['overview']
-
-'Anna Kendrick'
-'AnnaKendrick'
-
-def remove_space(L):
-    L1 = []
-    for i in L:
-        L1.append(i.replace(" ",""))
-    return L1
-
-movies['cast'] = movies['cast'].apply(remove_space)
-movies['crew'] = movies['crew'].apply(remove_space)
-movies['genres'] = movies['genres'].apply(remove_space)
-movies['keywords'] = movies['keywords'].apply(remove_space)
-
-movies.head()
-
-movies['tags'] = movies['overview'] + movies['genres'] + movies['keywords'] + movies['cast'] + movies['crew']
-
-movies.head()
-
-movies.iloc[0]['tags']
-
-new_df = movies[['movie_id', 'title', 'tags', 'year', 'vote_average']]
-
-new_df.head()
-
-new_df['tags'] = new_df['tags'].apply(lambda x: " ".join(x))
-new_df.head()
-
-new_df.iloc[0]['tags']
-
-new_df['tags'] = new_df['tags'].apply(lambda x:x.lower())
-
-new_df.head()
-
-new_df.iloc[0]['tags']
-
-import nltk
-from nltk.stem import PorterStemmer
-
-ps = PorterStemmer()
 
 
-def stems(text):
-    T = []
+st.set_page_config(
+    page_title="Movie Recommendation System",
+    page_icon="🎬",
+    layout="centered"
+)
 
-    for i in text.split():
-        T.append(ps.stem(i))
 
-    return " ".join(T)
+movies_dict = pickle.load(open('artifacts/tmdb_5000_credits.pkl', 'rb'))
+similarity = pickle.load(open('artifacts/similarity.pkl', 'rb'))
 
-new_df['tags'] = new_df['tags'].apply(stems)
+# Convert dictionary to DataFrame
+movies = pd.DataFrame(movies_dict)
 
-new_df.iloc[0]['tags']
-
-from sklearn.feature_extraction.text import CountVectorizer
-cv = CountVectorizer(max_features=5000,stop_words='english')
-
-vector = cv.fit_transform(new_df['tags']).toarray()
-
-vector[0]
-
-vector.shape
-
-len(cv.get_feature_names_out())
-
-from sklearn.metrics.pairwise import cosine_similarity
-
-similarity = cosine_similarity(vector)
-
-similarity.shape
-
-new_df[new_df['title'] == 'The Lego Movie'].index[0]
 
 def recommend(movie):
-    index = new_df[new_df['title'] == movie].index[0]
-    distances = sorted(list(enumerate(similarity[index])),reverse=True,key = lambda x: x[1])
-    for i in distances[1:6]:
-        print(new_df.iloc[i[0]].title)
+    movie_index = movies[movies['title'] == movie].index[0]
+    distances = similarity[movie_index]
 
-recommend('Spider-Man 2')
+    movie_list = sorted(
+        list(enumerate(distances)),
+        reverse=True,
+        key=lambda x: x[1]
+    )[1:6]
 
-import pickle
+    recommendations = []
+    for i in movie_list:
+        recommendations.append(movies.iloc[i[0]].title)
 
-import pickle
-import os
-
-os.makedirs('artifacts', exist_ok=True)
-
-with open('artifacts/tmdb_5000_credits.pkl', 'wb') as f:
-    pickle.dump(new_df.to_dict(), f)
-
-with open('artifacts/similarity.pkl', 'wb') as f:
-    pickle.dump(similarity, f)
+    return recommendations
 
 
+st.title("🎬 Movie Recommendation System")
+st.write("Select a movie and get similar movie recommendations")
 
+selected_movie = st.selectbox(
+    "Choose a movie",
+    movies['title'].values
+)
+
+if st.button("Recommend"):
+    recommendations = recommend(selected_movie)
+
+    st.subheader("🎯 Recommended Movies:")
+    for movie in recommendations:
+        st.write("👉", movie)
 
