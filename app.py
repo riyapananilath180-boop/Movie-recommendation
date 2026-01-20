@@ -5,8 +5,8 @@ import pandas as pd
 import pip
 from pandas import DataFrame
 
-movies = pd.read_csv(".venv/data/tmdb_5000_movies.csv")
-credits = pd.read_csv(".venv/data/tmdb_5000_credits.csv")
+#movies = pd.read_csv(".venv/data/tmdb_5000_movies.csv")
+#credits = pd.read_csv(".venv/data/tmdb_5000_credits.csv")
 
 movies.head(2)
 
